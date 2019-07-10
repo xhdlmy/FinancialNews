@@ -1,3 +1,14 @@
 <resources>
-    <string name="app_name">FinancialNews</string>
+    <string name="app_name">艾德金融资讯</string>
+    <string name="loading">加载中</string>
+
+    福利 | Android | iOS | 休息视频 | 拓展资源 | 前端
+    <string name="info_all">全部</string>
+    <string name="info_web">前端</string>
+    <string name="info_android">Android</string>
+    <string name="info_ios">iOS</string>
+    <string name="info_rest">休息视频</string>
+    <string name="info_expands">拓展资源</string>
+    <string name="info_weal">福利</string>
+
 </resources>

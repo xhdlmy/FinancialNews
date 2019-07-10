@@ -3,4 +3,35 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+
+    <color name="mn_colorDialogWindowBg">#00000000</color>
+    <color name="mn_colorDialogTrans">#00000000</color>
+    <color name="mn_colorDialogViewBg">#b2000000</color>
+    <color name="mn_colorDialogTextColor">#ffffff</color>
+    <color name="mn_colorDialogProgressBarColor">#ffffff</color>
+    <color name="mn_colorDialogImageTintColor">#ffffff</color>
+    <color name="mn_colorDialogProgressBarBgColor">#b4b4b4</color>
+    <color name="mn_colorDialogProgressBarProgressColor">#FFFFFF</color>
+    <color name="mn_colorDialogProgressBarSecondProgressColor">#ff9c9c</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="orange">#FF3B06</color>
+    <color name="deep">#333333</color>
+    <color name="gray">#666666</color>
+    <color name="shadow">#B6B6B6</color>
+    <color name="shadow_tv">#999999</color>
+    <color name="shadow_ss">#66B6B6B6</color>
+    <color name="seal_bg">#33222222</color>
+    <color name="seal_text_bg">#33000000</color>
+    <color name="white_trans_bg">#33000000</color>
+    <color name="white_eb_33">#33EBEBEB</color>
+    <color name="white_f8">#F8F8F8</color>
+    <color name="white_eb">#EBEBEB</color>
+    <color name="link_blue">#3475AD</color>
+    <color name="transparent">#66000000</color>
+    <color name="alpha_90_white">#e6ffffff</color>
+    <color name="alpha_30_black">#4d000000</color>
+    <color name="trans_white">#00ffffff</color>
+
 </resources>

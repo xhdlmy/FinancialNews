@@ -8,7 +8,9 @@ buildscript {
     }
     dependencies {
         //noinspection GradleDependency
-        classpath 'com.android.tools.build:gradle:3.2.1'
+        classpath 'com.android.tools.build:gradle:3.0.1'
+        //noinspection GradleDependency
+        classpath 'com.jakewharton:butterknife-gradle-plugin:8.4.0'
     }
 }
 
@@ -28,8 +30,7 @@ ext {
     minSdkVersion = 21
     compileSdkVersion = 28
     targetSdkVersion = 26
-    supportLibVersion = "26.1.0"
-    googlePlayServicesVersion   = "12.0.1"
+    supportLibVersion = "28.0.0"
 
     setDefaultConfig = { project ->
         project.android {
