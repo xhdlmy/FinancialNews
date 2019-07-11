@@ -55,11 +55,6 @@ public class InfoActivity extends BaseActivity {
 
     @Override
     public void initData() {
-        for (Integer resId : mResTabTitles) {
-            mTabLayout.addTab(mTabLayout.newTab().setText(resId));
-        }
-        mViewPager.setAdapter(new InfoPagerAdapter(getSupportFragmentManager(), Arrays.asList(mFragments)));
-        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
         mTabLayout.addOnTabSelectedListener(new TabLayout.BaseOnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -76,6 +71,12 @@ public class InfoActivity extends BaseActivity {
 
             }
         });
+        for (Integer resId : mResTabTitles) {
+            mTabLayout.addTab(mTabLayout.newTab().setText(resId));
+        }
+        mViewPager.setAdapter(new InfoPagerAdapter(getSupportFragmentManager(), Arrays.asList(mFragments)));
+        mViewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(mTabLayout));
+
     }
 
     @Override

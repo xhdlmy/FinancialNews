@@ -4,6 +4,9 @@ import android.content.Context;
 
 import com.aide.financial.Constant;
 import com.aide.financial.R;
+import com.aide.financial.base.InfoFragment;
+import com.aide.financial.base.InfoPresenter;
+import com.aide.financial.base.InfoView;
 import com.aide.financial.base.LazyPagerStateFragment;
 import com.aide.financial.net.retrofit.OnNextListener;
 import com.aide.financial.net.retrofit.RxRequest;
@@ -22,7 +25,7 @@ import io.reactivex.schedulers.Schedulers;
  * Created by Bruce on 2019/7/10.
  */
 
-public class InfoAllFragment extends LazyPagerStateFragment {
+public class InfoAllFragment extends InfoFragment {
 
     private int mPager = 1;
     private List<GankData> mResults;
@@ -39,21 +42,26 @@ public class InfoAllFragment extends LazyPagerStateFragment {
 
     @Override
     public void initData() {
-        new RxRequest(mFragment, new OnNextListener<GankResp>() {
-            @Override
-            public void onNext(GankResp gankResp) {
-                mResults = gankResp.results;
-                for (GankData data : mResults){
-                    LogUtils.i(TAG, data.toString());
-                }
-            }
+        mPresenter.getGankData(Constant.INFO_ALL, Constant.POST_COUNT_10, mPager);
+    }
 
-            @Override
-            public void onError(ApiException e) {
-                super.onError(e);
-                LogUtils.i(TAG, e.message);
-            }
-        }).post(Constant.INFO_ALL, Constant.POST_COUNT_10, 1);
+    @Override
+    public void onGetInfoSuccess(List<GankData> list) {
+
+    }
+
+    @Override
+    public void onGetInfoFailed(String errorMsg) {
+
+    }
+
+    @Override
+    public void onLoadmoreSuccess(List<GankData> list) {
+
+    }
+
+    @Override
+    public void onLoadmoreFailed(String errorMsg) {
 
     }
 }
