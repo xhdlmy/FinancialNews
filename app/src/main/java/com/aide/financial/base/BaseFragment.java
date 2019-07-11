@@ -1,6 +1,7 @@
 package com.aide.financial.base;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -13,96 +14,97 @@ import com.aide.financial.util.LogUtils;
 
 public abstract class BaseFragment extends RxFragment {
 
-    protected BaseActivity mActivity;
+    protected Context mContext;
+    protected BaseActivity mActivity; // 慎用
     protected View mView;
     protected String TAG;
-    protected Bundle mBundle;
 
-    protected boolean mIsInitData;
+    // 开发过程中对 fragment 生命周期方法的 Log 研究
+    private boolean lifecycleSwitch = false;
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        mContext = context;
+    }
 
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
         TAG = this.getClass().getSimpleName();
-        LogUtils.i(TAG, "onAttach");
+        if (lifecycleSwitch) LogUtils.i(TAG, "onAttach");
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LogUtils.i(TAG, "onCreate");
         mActivity = (BaseActivity) getActivity();
+        if (lifecycleSwitch) LogUtils.i(TAG, "onCreate");
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        LogUtils.i(TAG, "onCreateView");
+        if (lifecycleSwitch) LogUtils.i(TAG, "onCreateView");
+        // 一旦 Fragment 从回退栈（BackStack）中返回时，View 将会被销毁和重建
         if(mView == null) {
             mView = inflater.inflate(getResId(), null);
             initView();
         }
-        // 初始化数据并与视图绑定
-        if(!mIsInitData) {
-            mBundle = getArguments();
-            initData();
-            LogUtils.i(TAG, "initData");
-        }
-        mIsInitData = true;
-        // 更新数据
-        refreshData();
         return mView;
     }
 
-    // ViewPager 切换时还是会执行，说明又会走一遍 initData()
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (lifecycleSwitch) LogUtils.i(TAG, "onViewCreated");
+    }
+
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        LogUtils.i(TAG, "onActivityCreated");
         super.onActivityCreated(savedInstanceState);
+        if (lifecycleSwitch) LogUtils.i(TAG, "onActivityCreated");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (lifecycleSwitch) LogUtils.i(TAG, "onResume");
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (lifecycleSwitch) LogUtils.i(TAG, "onHiddenChanged");
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (lifecycleSwitch) LogUtils.i(TAG, "onSaveInstanceState");
+        // Activity Home 或者 内存杀死
+        // ViewPager 切换也会执行
     }
 
     @Override
     public void onDestroyView() {
-        LogUtils.i(TAG, "onDestroyView");
+        if (lifecycleSwitch) LogUtils.i(TAG, "onDestroyView");
         super.onDestroyView();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        LogUtils.i(TAG, "onDestroy");
+        if (lifecycleSwitch) LogUtils.i(TAG, "onDestroy");
     }
 
     @Override
     public void onDetach() {
         super.onDetach();
-        LogUtils.i(TAG, "onDetach");
+        if (lifecycleSwitch) LogUtils.i(TAG, "onDetach");
     }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        LogUtils.i(TAG, "onSaveInstanceState");
-    }
-
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        if(hidden){
-            LogUtils.i(TAG, "onHiddenChanged onFragmentPause");
-            onFragmentPause();
-        }else{
-            LogUtils.i(TAG, "onHiddenChanged onFragmentResume");
-            onFragmentResume();
-        }
-        super.onHiddenChanged(hidden);
-    }
-
-    public void onFragmentResume(){}
-    public void onFragmentPause(){}
 
     protected abstract int getResId();
     public abstract void initView();
-    public abstract void initData();
-    public abstract void refreshData();
 
 }

@@ -1,16 +1,14 @@
 package com.aide.financial.activity;
 
 import android.support.annotation.IntegerRes;
-import android.support.annotation.StringRes;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 
 import com.aide.financial.R;
 import com.aide.financial.adapter.InfoPagerAdapter;
 import com.aide.financial.base.BaseActivity;
-import com.aide.financial.base.BaseFragment;
+import com.aide.financial.base.LazyPagerStateFragment;
 import com.aide.financial.fragment.InfoAllFragment;
 import com.aide.financial.fragment.InfoAndroidFragment;
 import com.aide.financial.fragment.InfoExpandFragment;
@@ -20,7 +18,6 @@ import com.aide.financial.fragment.InfoWealFragment;
 import com.aide.financial.fragment.InfoWebFragment;
 
 import java.util.Arrays;
-import java.util.List;
 
 import butterknife.BindView;
 
@@ -41,7 +38,7 @@ public class InfoActivity extends BaseActivity {
         R.string.info_weal,
     };
 
-    private BaseFragment[] mFragments = {
+    private LazyPagerStateFragment[] mFragments = {
       new InfoAllFragment(),
       new InfoWebFragment(),
       new InfoAndroidFragment(),
@@ -79,5 +76,10 @@ public class InfoActivity extends BaseActivity {
 
             }
         });
+    }
+
+    @Override
+    public void onAttachFragment(Fragment fragment) {
+        super.onAttachFragment(fragment);
     }
 }

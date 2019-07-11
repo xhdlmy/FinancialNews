@@ -27,6 +27,7 @@ public abstract class BaseActivity extends RxActivity {
         super.onCreate(savedInstanceState);
         mContext = this;
         mActivity = this;
+        ActivityCollector.addActivity(this);
         setContentView(getResId());
         mButterKnifeBind = ButterKnife.bind(this);
         TAG = this.getClass().getSimpleName();
@@ -43,6 +44,7 @@ public abstract class BaseActivity extends RxActivity {
         if(mProgressDialog != null) mProgressDialog.dismiss();
         mContext = null;
         mActivity = null;
+        ActivityCollector.removeActivity(this);
     }
 
     public void setMProgressDialog(Dialog progressDialog){

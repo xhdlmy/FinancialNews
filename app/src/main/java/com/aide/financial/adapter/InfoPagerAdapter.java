@@ -2,9 +2,10 @@ package com.aide.financial.adapter;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
+import android.view.ViewGroup;
 
-import com.aide.financial.base.BaseFragment;
+import com.aide.financial.base.LazyPagerStateFragment;
 
 import java.util.List;
 
@@ -12,18 +13,18 @@ import io.reactivex.annotations.NonNull;
 
 /**
  * Created by Bruce on 2019/7/10.
- * Fragment 在 ViewPager 的生命周期由 FragmentPagerAdapter 托管
+ * Fragment 在 ViewPager 的生命周期由 PagerAdapter 托管
  */
 
-public class InfoPagerAdapter extends FragmentPagerAdapter {
+public class InfoPagerAdapter extends FragmentStatePagerAdapter {
 
-    private List<BaseFragment> mFragments;
+    private List<LazyPagerStateFragment> mFragments;
 
-    public InfoPagerAdapter(FragmentManager fm) {
+    private InfoPagerAdapter(FragmentManager fm) {
         super(fm);
     }
 
-    public InfoPagerAdapter(FragmentManager fm, @NonNull List<BaseFragment> fragments){
+    public InfoPagerAdapter(FragmentManager fm, @NonNull List<LazyPagerStateFragment> fragments){
         this(fm);
         mFragments = fragments;
     }
