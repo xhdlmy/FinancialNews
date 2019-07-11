@@ -12,10 +12,12 @@ public class GankData implements Parcelable {
     public String createdAt;
     public String desc;
     public String publishedAt;
+    public String source;
     public String type;
     public String url;
     public boolean used;
     public String who;
+
 
     @Override
     public int describeContents() {
@@ -28,6 +30,7 @@ public class GankData implements Parcelable {
         dest.writeString(this.createdAt);
         dest.writeString(this.desc);
         dest.writeString(this.publishedAt);
+        dest.writeString(this.source);
         dest.writeString(this.type);
         dest.writeString(this.url);
         dest.writeByte(this.used ? (byte) 1 : (byte) 0);
@@ -42,6 +45,7 @@ public class GankData implements Parcelable {
         this.createdAt = in.readString();
         this.desc = in.readString();
         this.publishedAt = in.readString();
+        this.source = in.readString();
         this.type = in.readString();
         this.url = in.readString();
         this.used = in.readByte() != 0;
@@ -59,4 +63,19 @@ public class GankData implements Parcelable {
             return new GankData[size];
         }
     };
+
+    @Override
+    public String toString() {
+        return "GankData{" +
+                "_id='" + _id + '\'' +
+                ", createdAt='" + createdAt + '\'' +
+                ", desc='" + desc + '\'' +
+                ", publishedAt='" + publishedAt + '\'' +
+                ", source='" + source + '\'' +
+                ", type='" + type + '\'' +
+                ", url='" + url + '\'' +
+                ", used=" + used +
+                ", who='" + who + '\'' +
+                '}';
+    }
 }

@@ -14,6 +14,7 @@ import com.aide.financial.net.retrofit.resp.GankResp;
 import com.aide.financial.net.retrofit.subscriber.ProgressSubscriber;
 import com.aide.financial.util.LogUtils;
 import com.aide.financial.util.NetworkUtils;
+import com.google.gson.Gson;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -21,6 +22,7 @@ import io.reactivex.ObservableTransformer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.ResponseBody;
 
 /**
  * Created by Bruce on 2019/7/11.
@@ -34,6 +36,11 @@ public class RxRequest {
     private OnNextListener<GankResp> mListener;
 
     private boolean mIsNoDialog;
+
+    public RxRequest(RxFragment rxFragment) {
+        mRxFragment = rxFragment;
+        mRxActivity = (RxActivity) mRxFragment.getActivity();
+    }
 
     public RxRequest(RxFragment rxFragment, OnNextListener<GankResp> listener) {
         mRxFragment = rxFragment;
@@ -53,10 +60,11 @@ public class RxRequest {
     }
 
     public void post(String category, int count, int pager){
+        if(mListener == null) return;
         Observable observable = getObservable(category, count, pager);
-        ProgressSubscriber subscriber = new ProgressSubscriber(this, mListener);
+        ProgressSubscriber subscriber = new ProgressSubscriber(mListener);
         if(mIsNoDialog) subscriber.setNoDialog();
-        observable.subscribe();
+        observable.subscribe(subscriber);
     }
 
     public Observable<GankResp> getObservable(String category, int count, int pager){
@@ -71,18 +79,13 @@ public class RxRequest {
                 .compose(this.handleThread());
     }
 
-    public Observable<GankResp> getObservableWithoutLifecycle(String category, int count, int pager){
-        if(!NetworkUtils.isNetworkConnected()){
-            return Observable.error(new NoNetException());
-        }
-        return RxRetrofit.getService().post(category, count, pager)
-                .compose(this.handlerResp())
-                .compose(this.handleError())
-                .retryWhen(new RetryWhenNetworkException());
-    }
+    private Gson mGson = new Gson();
 
-    private ObservableTransformer<GankResp, GankResp> handlerResp() {
-        return upstream -> upstream.map((Function<GankResp, GankResp>) gankResp -> {
+    private ObservableTransformer<ResponseBody, GankResp> handlerResp() {
+        return upstream -> upstream.map((Function<ResponseBody, GankResp>) responseBody -> {
+            String string = responseBody.string();
+            LogUtils.i(TAG, string);
+            GankResp gankResp = mGson.fromJson(string, GankResp.class);
             if(gankResp.error){
                 throw new ProtocolException(ERROR.JSON_ERROR, mRxActivity.getString(R.string.error_protocol_json_resp));
             }

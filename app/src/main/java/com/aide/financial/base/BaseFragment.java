@@ -16,6 +16,7 @@ public abstract class BaseFragment extends RxFragment {
 
     protected Context mContext;
     protected BaseActivity mActivity; // 慎用
+    protected BaseFragment mFragment;
     protected View mView;
     protected String TAG;
 
@@ -38,6 +39,7 @@ public abstract class BaseFragment extends RxFragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        mFragment = this;
         mActivity = (BaseActivity) getActivity();
         if (lifecycleSwitch) LogUtils.i(TAG, "onCreate");
     }

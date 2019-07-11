@@ -39,7 +39,7 @@ public class RxRetrofit {
         Retrofit.Builder builder = new Retrofit.Builder();
         builder.baseUrl(Constant.URL_BASE)
                 .client(client)
-                .addConverterFactory(GsonConverterFactory.create())
+//                .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create());
         return builder.build();
     }

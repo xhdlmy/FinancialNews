@@ -46,7 +46,7 @@
                     android:secondaryProgress="80"
                     android:visibility="visible" />
 
-                <com.bee.house.ui.widget.MCircularProgressBar
+                <com.aide.financial.widget.MCircularProgressBar
                     android:id="@+id/circularProgressBar"
                     android:layout_width="50dp"
                     android:layout_height="50dp"

@@ -6,7 +6,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 
 import com.aide.financial.R;
-import com.aide.financial.adapter.InfoPagerAdapter;
+import com.aide.financial.adapter.viewpager.InfoPagerAdapter;
 import com.aide.financial.base.BaseActivity;
 import com.aide.financial.base.LazyPagerStateFragment;
 import com.aide.financial.fragment.InfoAllFragment;

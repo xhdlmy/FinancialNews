@@ -32,11 +32,7 @@ public class ProgressSubscriber implements Observer<GankResp> {
 
     private static final String TAG = ProgressSubscriber.class.getSimpleName();
 
-    private RxRequest mRequest;
     private Disposable mDisposable;
-
-    private int mRetryCount = 0;
-    private static final int RETRY_COUNT = 2;
 
     private SoftReference<RxActivity> mActivitySoftReference;
     private SoftReference<OnNextListener<GankResp>> mOnNextListenerSoftReference;
@@ -45,12 +41,11 @@ public class ProgressSubscriber implements Observer<GankResp> {
 
     private MProgressDialog mProgressDialog;
 
-    public ProgressSubscriber(@NonNull RxRequest request, @NonNull OnNextListener onNextListener){
-        this(request, onNextListener, true);
+    public ProgressSubscriber(@NonNull OnNextListener onNextListener){
+        this(onNextListener, true);
     }
 
-    public ProgressSubscriber(@NonNull RxRequest request, @NonNull OnNextListener onNextListener, boolean isNeedCancelDialog) {
-        mRequest = request;
+    public ProgressSubscriber(@NonNull OnNextListener onNextListener, boolean isNeedCancelDialog) {
         mActivitySoftReference = new SoftReference(ActivityCollector.getTopActivity());
         mOnNextListenerSoftReference = new SoftReference(onNextListener);
         mActivity = mActivitySoftReference.get();

@@ -28,7 +28,7 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <com.bee.house.ui.widget.MProgressWheel
+            <com.aide.financial.widget.MProgressWheel
                 android:id="@+id/progress_wheel"
                 android:layout_width="50dp"
                 android:layout_height="50dp"

@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">艾德金融资讯</string>
+    <string name="app_purpose">———  一个账号  交易全球  ———</string>
 
     <string name="error_http">http请求失败</string>
     <string name="error_json">解析出错</string>
@@ -15,9 +16,11 @@
     <string name="load_fail">加载失败，点击重试</string>
     <string name="load_end">加载完毕</string>
     <string name="retry_load">重新加载</string>
+    <string name="load_empty">空空如也</string>
+    <string name="load_error">加载出错</string>
 
     福利 | Android | iOS | 休息视频 | 拓展资源 | 前端
-    <string name="info_all">全部</string>
+    <string name="info_all">all</string>
     <string name="info_web">前端</string>
     <string name="info_android">Android</string>
     <string name="info_ios">iOS</string>
