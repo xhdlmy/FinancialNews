@@ -10,6 +10,10 @@ public class ProtocolException extends Exception {
     private int mStateCode;
     private String mErrorMsg;
 
+    public ProtocolException(String errorMsg) {
+        mErrorMsg = errorMsg;
+    }
+
     public ProtocolException(int stateCode, String errorMsg) {
         mStateCode = stateCode;
         mErrorMsg = errorMsg;

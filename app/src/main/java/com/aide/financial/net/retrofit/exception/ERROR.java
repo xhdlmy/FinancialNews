@@ -32,4 +32,8 @@ public class ERROR {
      *  json 数据出错
      */
     public static final int JSON_ERROR = -8;
+    /**
+     *  自定义出错
+     */
+    public static final int CUSTOM_ERROR = -4;
 }

@@ -1,10 +1,10 @@
 package com.aide.financial.base;
 
-import com.aide.financial.base.rx.RxActivity;
-import com.aide.financial.base.rx.RxFragment;
 import com.aide.financial.net.retrofit.OnNextListener;
 import com.aide.financial.net.retrofit.RxRequest;
 import com.aide.financial.net.retrofit.exception.ApiException;
+import com.aide.financial.net.retrofit.exception.ERROR;
+import com.aide.financial.net.retrofit.exception.ProtocolException;
 import com.aide.financial.net.retrofit.resp.GankResp;
 
 public class InfoPresenter extends BasePresenter<InfoView> {
@@ -15,7 +15,8 @@ public class InfoPresenter extends BasePresenter<InfoView> {
 
     public void getGankData(String category, int count, int pager){
         if(pager <= 0) {
-            mView.onGetInfoFailed("pager must from 1 start");
+            ProtocolException exception = new ProtocolException("pager must from 1 start");
+            mView.onGetInfoFailed(new ApiException(exception, ERROR.CUSTOM_ERROR));
         }
         new RxRequest(mFragment, new OnNextListener<GankResp>() {
             @Override
@@ -32,12 +33,12 @@ public class InfoPresenter extends BasePresenter<InfoView> {
                 super.onError(e);
                 if(e.message == null) e.message = "load gank msg failed";
                 if(pager == 1){
-                    mView.onGetInfoFailed(e.message);
+                    mView.onGetInfoFailed(e);
                 }else{
-                    mView.onLoadmoreFailed(e.message);
+                    mView.onLoadmoreFailed(e);
                 }
             }
-        }).post(category, count, pager);
+        }).withoutProgress().post(category, count, pager);
     }
 
 }

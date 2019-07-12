@@ -23,19 +23,20 @@
         android:visibility="gone">
 
         <TextView
-            android:id="@+id/iv_error"
+            android:id="@+id/tv_error"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="@string/load_error"/>
+            android:layout_margin="20dp"
+            android:text="@string/load_error"
+            android:textSize="20sp"/>
 
         <Button
             android:id="@+id/btn_retry"
-            android:layout_width="120dp"
-            android:layout_height="30dp"
-            android:layout_below="@id/iv_error"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
+            android:layout_below="@id/tv_error"
             android:background="@drawable/pager_error_btn_selector"
             android:text="@string/retry_load"
             android:textColor="@color/pager_error_tv_selector"

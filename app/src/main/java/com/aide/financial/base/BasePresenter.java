@@ -26,4 +26,8 @@ public class BasePresenter<V> {
         this.mView = null;
     }
 
+    public V getView(){
+        return mView;
+    }
+
 }

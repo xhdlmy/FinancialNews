@@ -1,17 +1,97 @@
 package com.aide.financial.base;
 
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.Nullable;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.widget.TextView;
 
+import com.aide.financial.Constant;
+import com.aide.financial.R;
+import com.aide.financial.adapter.recycle.BaseRecyclerAdapter;
+import com.aide.financial.adapter.recycle.BaseViewHolder;
+import com.aide.financial.net.retrofit.exception.ApiException;
+import com.aide.financial.net.retrofit.resp.GankData;
 import com.aide.financial.util.LogUtils;
+import com.aide.financial.widget.RecyclerErrorLayout;
+import com.aide.financial.widget.dialog.MToast;
+
+import java.util.List;
 
 public abstract class InfoFragment extends LazyPagerStateFragment implements InfoView {
 
+    protected RecyclerErrorLayout mLayout;
+    protected SwipeRefreshLayout mSwipeRefreshLayout;
+    protected RecyclerView mRecyclerView;
+
+    protected int mPager = 1;
+    protected BaseRecyclerAdapter<GankData> mAdapter;
     protected InfoPresenter mPresenter = new InfoPresenter(this);
+
+    @Override
+    protected int getResId() {
+        return R.layout.fragment_info_all;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mPresenter = new InfoPresenter(this);
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         mPresenter.detachView();
     }
+
+    protected void initRecyclerView(String category, int count) {
+        mLayout = mView.findViewById(R.id.recycler_error_layout);
+        mSwipeRefreshLayout = mLayout.getSwipeRefreshLayout();
+        mSwipeRefreshLayout.setOnRefreshListener(() -> {
+            mPager = 1;
+            mPresenter.getGankData(category, count, mPager);
+        });
+        mRecyclerView = mLayout.getRecyclerView();
+        mLayout.getRetryButton().setOnClickListener(v -> {
+            mPager = 1;
+            mPresenter.getGankData(category, count, mPager);
+        });
+    }
+
+    protected void swipeRefresh(List<GankData> list, int count) {
+        mAdapter.setDatas(list);
+        if (list.size() < count){
+            mAdapter.setLoadMoreEnable(false); // 不然 pager 不增加，会一直加载
+        }else{
+            mAdapter.loadComplete();
+        }
+    }
+
+    @Override
+    public void onGetInfoFailed(ApiException exception) {
+        mLayout.showErrorView();
+    }
+
+    @Override
+    public void onLoadmoreSuccess(List<GankData> list) {
+        if(mAdapter == null) return;
+        // 加载更多
+        if(list != null && list.size() != 0) {
+            mPager++;
+            mAdapter.addDatas(list);
+            mAdapter.loadComplete();
+        }else{
+            mAdapter.loadEnd();
+        }
+    }
+
+    @Override
+    public void onLoadmoreFailed(ApiException exception) {
+        if(mAdapter == null) return;
+        mAdapter.loadFail();
+    }
+    
 }

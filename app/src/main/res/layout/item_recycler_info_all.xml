@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:src="@color/alpha_30_black"/>
+
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/item_gank_margin_lr"
+        android:layout_marginRight="@dimen/item_gank_margin_lr"
+        android:layout_marginTop="@dimen/item_gank_margin_top"
+        android:layout_marginBottom="@dimen/item_gank_margin_inteval"
+        android:textSize="@dimen/item_gank_title_sp"/>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginLeft="@dimen/item_gank_margin_lr"
+        android:layout_marginRight="@dimen/item_gank_margin_lr"
+        android:layout_marginTop="@dimen/item_gank_margin_inteval"
+        android:layout_marginBottom="@dimen/item_gank_margin_buttom">
+
+        <TextView
+            android:id="@+id/tv_author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_gank_sub_padding"
+            android:drawableLeft="@drawable/icon_person"
+            android:drawablePadding="@dimen/item_gank_drawable_padding"
+            android:textSize="@dimen/item_gank_sub_sp"/>
+
+        <TextView
+            android:id="@+id/tv_create_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_gank_sub_padding"
+            android:drawableLeft="@drawable/icon_time"
+            android:drawablePadding="@dimen/item_gank_drawable_padding"
+            android:textSize="@dimen/item_gank_sub_sp"/>
+
+        <TextView
+            android:id="@+id/tv_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="@dimen/item_gank_sub_padding"
+            android:drawableLeft="@drawable/icon_label"
+            android:drawablePadding="@dimen/item_gank_drawable_padding"
+            android:textSize="@dimen/item_gank_sub_sp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

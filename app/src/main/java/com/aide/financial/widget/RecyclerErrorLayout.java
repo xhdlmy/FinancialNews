@@ -13,7 +13,6 @@ import android.widget.RelativeLayout;
 
 import com.aide.financial.R;
 
-
 /**
  * 组合式控件
  */
