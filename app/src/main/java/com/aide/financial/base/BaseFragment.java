@@ -75,6 +75,12 @@ public abstract class BaseFragment extends RxFragment {
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+        if (lifecycleSwitch) LogUtils.i(TAG, "onPause");
+    }
+
+    @Override
     public void onHiddenChanged(boolean hidden) {
         super.onHiddenChanged(hidden);
         if (lifecycleSwitch) LogUtils.i(TAG, "onHiddenChanged");
@@ -86,6 +92,12 @@ public abstract class BaseFragment extends RxFragment {
         if (lifecycleSwitch) LogUtils.i(TAG, "onSaveInstanceState");
         // Activity Home 或者 内存杀死
         // ViewPager 切换也会执行
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (lifecycleSwitch) LogUtils.i(TAG, "onStop");
     }
 
     @Override

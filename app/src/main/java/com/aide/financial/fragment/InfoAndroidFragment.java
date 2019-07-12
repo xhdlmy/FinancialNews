@@ -20,40 +20,16 @@ import java.util.List;
 
 public class InfoAndroidFragment extends InfoFragment {
 
-    private String mLabel = Constant.INFO_ANDROID;
-    private int mCount = Constant.COUNT_10;
-
     @Override
-    public void initView() {
-        initRecyclerView(mLabel, mCount);
+    protected void initInfoParams() {
+        mCategory = Constant.INFO_ANDROID;
+        mCount = Constant.COUNT_10;
+        mRecycleLayoutResId = R.layout.item_recycler_info_all;
     }
 
     @Override
-    public void initData() {
-        mPresenter.getGankData(mLabel, mCount, mPager);
-    }
-
-    @Override
-    public void onGetInfoSuccess(List<GankData> list) {
-        if(mSwipeRefreshLayout.isRefreshing()) mSwipeRefreshLayout.setRefreshing(false);
-
-        mPager++;
-        if(mAdapter == null){
-            // 第一次加载
-            mLayout.showRecyclerView();
-            createAdapter(list);
-            mRecyclerView.setLayoutManager(new LinearLayoutManager(mContext));
-            mRecyclerView.setAdapter(mAdapter);
-        }else{
-            // 用户下拉刷新
-            swipeRefresh(list, mCount);
-        }
-
-    }
-
     protected void createAdapter(List<GankData> list) {
-        int recycleItemLayout = R.layout.item_recycler_info_all;
-        mAdapter = new BaseRecyclerAdapter<GankData>(mContext, recycleItemLayout, list) {
+        mAdapter = new BaseRecyclerAdapter<GankData>(mContext, mRecycleLayoutResId, list) {
             @Override
             protected void onBindData(BaseViewHolder holder, GankData data, int position) {
                 TextView tvTitle = holder.getView(R.id.tv_title);
@@ -69,11 +45,6 @@ public class InfoAndroidFragment extends InfoFragment {
                 });
             }
         };
-        // 如果第一次加载没有 Constant.COUNT_10 个数，则关闭更多加载；否则设置监听加载更多事件
-        if(list.size() < mCount) {
-            mAdapter.setLoadMoreEnable(false);
-        }
-        mAdapter.setOnLoadMoreListener(() -> mPresenter.getGankData(mLabel, mCount, mPager));
     }
 
 }

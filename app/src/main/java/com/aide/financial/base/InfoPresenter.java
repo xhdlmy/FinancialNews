@@ -18,12 +18,13 @@ public class InfoPresenter extends BasePresenter<InfoView> {
             ProtocolException exception = new ProtocolException("pager must from 1 start");
             mView.onGetInfoFailed(new ApiException(exception, ERROR.CUSTOM_ERROR));
         }
-        new RxRequest(mFragment, new OnNextListener<GankResp>() {
+        RxRequest rxRequest = new RxRequest(mFragment, new OnNextListener<GankResp>() {
+
             @Override
             public void onNext(GankResp gankResp) {
-                if(pager == 1){
+                if (pager == 1) {
                     mView.onGetInfoSuccess(gankResp.results);
-                }else{
+                } else {
                     mView.onLoadmoreSuccess(gankResp.results);
                 }
             }
@@ -31,14 +32,20 @@ public class InfoPresenter extends BasePresenter<InfoView> {
             @Override
             public void onError(ApiException e) {
                 super.onError(e);
-                if(e.message == null) e.message = "load gank msg failed";
-                if(pager == 1){
+                if (e.message == null) e.message = "load gank msg failed";
+                if (pager == 1) {
                     mView.onGetInfoFailed(e);
-                }else{
+                } else {
                     mView.onLoadmoreFailed(e);
                 }
             }
-        }).withoutProgress().post(category, count, pager);
+        });
+//        if(pager == 1){
+//            rxRequest.post(category, count, pager);
+//        }else{
+//            rxRequest.withoutProgress().post(category, count, pager);
+//        }
+        rxRequest.withoutProgress().post(category, count, pager);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.aide.financial.net.retrofit;
 
 import com.aide.financial.R;
+import com.aide.financial.base.LazyPagerStateFragment;
 import com.aide.financial.base.rx.ActivityLifecycleEvent;
 import com.aide.financial.base.rx.FragmentLifecycleEvent;
 import com.aide.financial.base.rx.RxActivity;

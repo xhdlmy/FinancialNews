@@ -1,7 +1,5 @@
 package com.aide.financial;
 
-import android.content.Context;
-
 /**
  * Created by Bruce on 2019/6/24.
  */
@@ -17,7 +15,7 @@ public class Constant {
     public static final String INFO_WEAL = FinancialApplication.getContext().getString(R.string.info_weal);
 
     public static final int COUNT_10 = 10;
-    public static final int COUNT_20 = 20;
+//    public static final int COUNT_20 = 20;
 
     /**
      * HTTP 协议相关

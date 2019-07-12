@@ -39,10 +39,10 @@ public abstract class LazyPagerStateFragment extends BaseFragment {
      * @return 返回值代表是否加载数据
      */
     public boolean requestData(boolean isNeedUpdateEveryTime){
+        LogUtils.i(TAG, "isLoadData:" + mIsFirstLoadData);
         if(getUserVisibleHint() && mIsViewCreated && (!mIsFirstLoadData || isNeedUpdateEveryTime)){
             LogUtils.i(TAG, "initData");
             initData();
-            mIsFirstLoadData = true;
             return true;
         }
         return false;

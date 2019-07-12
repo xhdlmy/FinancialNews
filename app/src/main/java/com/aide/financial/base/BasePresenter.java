@@ -10,7 +10,6 @@ public class BasePresenter<V> {
     public RxFragment mFragment;
 
     public BasePresenter(V view) {
-        attachView(view);
         if(view instanceof RxActivity) mActivity = (RxActivity) view;
         if(view instanceof RxFragment){
             mFragment = (RxFragment) view;

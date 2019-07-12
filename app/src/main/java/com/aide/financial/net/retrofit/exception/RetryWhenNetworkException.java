@@ -41,7 +41,11 @@ public class RetryWhenNetworkException implements Function<Observable<Throwable>
                         LogUtils.i(TAG, "e:" + exception.code + "" + exception.message);
                     case ERROR.NETWORK_ERROR:
                         index++; // 记录重试次数 +1
-                        if(index <= COUNT) return Observable.timer(DELAY * index, TimeUnit.MILLISECONDS);
+                        if(index <= COUNT){
+                            return Observable.timer(DELAY * index, TimeUnit.MILLISECONDS);
+                        }else{
+                            return Observable.error(exception);
+                        }
                     default:
                         return Observable.error(exception);
                 }
