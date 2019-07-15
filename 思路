@@ -47,5 +47,31 @@
 
  4. 可扩展的滑动动画
 
+ 5. Error : Cannot call this method while RecyclerView is computing a layout or scrolling
+
+    在滑动过程中，不能调用 notifyItemChanged
+
 # Glide 图片加载
+
+ 1. 绑定 Fragment 生命周期，在 onDestroy 时候，自动调用 clear()  取消加载，回收资源；
+
+ 2. 在 RecyclerView 中加载图片，Glide 已经自动处理了 View 的复用和请求的取消；
+
+    2.1 如果它们在之前的位置上，用 Glide 进行过加载操作，那么在新的位置上要去执行一个新的加载操作；
+
+ 3. RequestBuilder 是Glide中请求的骨架，负责携带请求的url和你的设置项来开始一个新的加载过程。
+
+    3.1 请求选项 RequestOptions apply() 经常使用的简化的静态 apply 有:
+            请求前显示占位符 placeholder() 请求失败后显示失败图片 error()
+            请求后根据 ImageView 的大小进行变换 centerCrop()
+            缓存 diskCacheStrategy()
+    3.2 过渡 TransitionOption transition() 不常使用
+
+ 4. Target
+
+    4.1 当然在请求前可以 preload(width, height)
+    4.2 取消请求 clear()
+    4.3 重用请求的结果 setTag() getTag()
+
+
 

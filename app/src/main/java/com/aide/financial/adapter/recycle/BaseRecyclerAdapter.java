@@ -57,6 +57,8 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
  */
 
+// TODO 防止滑动的时候 notifyItemChanged
+
 public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
 
     public static final String TAG = BaseRecyclerAdapter.class.getSimpleName();
@@ -65,6 +67,8 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
 
     protected int mLayoutId;
     protected List<T> mDatas;
+
+    protected RecyclerView mRecyclerView;
 
     /**
      * MultipleType 的值不能为 该三种中的任何一个
@@ -240,7 +244,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LogUtils.i(TAG, "onCreateViewHolder");
-        BaseViewHolder viewHolder = null;
+        BaseViewHolder viewHolder;
         switch (viewType) {
             case HEADER_VIEW:
                 viewHolder = BaseViewHolder.create(mHeaderLayout);
@@ -276,16 +280,24 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         return viewHolder;
     }
 
+    private int mCurrentPosition;
+    private RecyclerView.ViewHolder mHolder;
+
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         LogUtils.i(TAG, "onBindViewHolder");
+        if(mHolder == null) mHolder = holder;
         final BaseViewHolder viewHolder = (BaseViewHolder) holder;
-        // 自动加载更多
-        if (position == getItemCount() - 1){
-            startLoadMore();
+        mCurrentPosition = position;
+        // 自动加载更多 && 必须在静止状态 才可以进行 加载更多
+        if (position == getItemCount() - 1
+                && getLoadMoreCount() != 0
+                && mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_DEFAULT){
+            LogUtils.i(TAG, "startLoadMore");
+            mLoadMoreItem.setStatus(LoadMoreItem.STATUS_LOADING);
         }
 
-        int viewType = viewHolder.getItemViewType();
+        int viewType = getItemViewType(position);
         switch (viewType) {
             case HEADER_VIEW:
                 LogUtils.i(TAG, "onBindHeaderView");
@@ -299,9 +311,26 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 break;
             default:
                 int adjustPos = position - getHeaderCount();
-                LogUtils.i(TAG, "onBindDataView : " );
+                LogUtils.i(TAG, "onBindDataView" );
                 onBindData(viewHolder, mDatas.get(adjustPos), adjustPos);
         }
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = recyclerView;
+        LogUtils.i(TAG, "onAttachedToRecyclerView");
+        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                LogUtils.i(TAG, "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
+                if(newState == RecyclerView.SCROLL_STATE_IDLE && mCurrentPosition == getItemCount() - 1){
+//                    onBindViewHolder(mHolder, mCurrentPosition);
+                    mLoadMoreListener.onLoadMore();
+                }
+            }
+        });
     }
 
     protected abstract void onBindData(final BaseViewHolder holder, T data, final int position);

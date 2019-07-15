@@ -30,22 +30,22 @@ public class InfoActivity extends BaseActivity {
 
     private @IntegerRes Integer[] mResTabTitles = {
         R.string.info_all,
+            R.string.info_weal,
         R.string.info_web,
         R.string.info_android,
         R.string.info_ios,
         R.string.info_rest,
         R.string.info_expands,
-        R.string.info_weal,
     };
 
     private LazyPagerStateFragment[] mFragments = {
       new InfoAllFragment(),
+      new InfoWealFragment(),
       new InfoWebFragment(),
       new InfoAndroidFragment(),
       new InfoIosFragment(),
       new InfoRestFragment(),
       new InfoExpandFragment(),
-      new InfoWealFragment(),
     };
 
     @Override

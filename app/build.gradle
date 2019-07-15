@@ -87,6 +87,11 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
 }
 
+/*
+    {
+        exclude group: "com.android.support"
+    }
+ */
 
 
 

@@ -17,6 +17,9 @@ public class Constant {
     public static final int COUNT_10 = 10;
 //    public static final int COUNT_20 = 20;
 
+    public static final String GLIDE_DIR = "glide";
+    public static final int GLIDE_CACHE_SIZE = 1024 * 1024 * 24; // 24M 缓存
+
     /**
      * HTTP 协议相关
      */
