@@ -59,8 +59,9 @@ public class InfoWealFragment extends InfoFragment {
             protected void onBindData(BaseViewHolder holder, GankData data, int position) {
                 final ImageView ivWeal = holder.getView(R.id.iv_weal);
 
-                Glide.with(mFragment)
+                GlideApp.with(mFragment)
                         .asBitmap()
+                        .trans()
                         .load(data.url)
                         .into(new SimpleTarget<Bitmap>() {
                             @Override

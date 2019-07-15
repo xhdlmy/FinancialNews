@@ -85,7 +85,7 @@ public class RxRequest {
     private ObservableTransformer<ResponseBody, GankResp> handlerResp() {
         return upstream -> upstream.map((Function<ResponseBody, GankResp>) responseBody -> {
             String string = responseBody.string();
-            LogUtils.i(TAG, string);
+//            Thread.sleep(3000); // TODO
             GankResp gankResp = mGson.fromJson(string, GankResp.class);
             if(gankResp.error){
                 throw new ProtocolException(ERROR.JSON_ERROR, mRxActivity.getString(R.string.error_protocol_json_resp));

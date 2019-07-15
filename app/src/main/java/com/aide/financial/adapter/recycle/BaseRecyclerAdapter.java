@@ -57,7 +57,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
  */
 
-// TODO 防止滑动的时候 notifyItemChanged
+// 防止滑动的时候 notifyItemChanged
 
 public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
 
@@ -325,8 +325,11 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 LogUtils.i(TAG, "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
+                LogUtils.i("xhd", "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
+                LogUtils.i("xhd", "position: " + mCurrentPosition);
                 if(newState == RecyclerView.SCROLL_STATE_IDLE && mCurrentPosition == getItemCount() - 1){
 //                    onBindViewHolder(mHolder, mCurrentPosition);
+                    LogUtils.i("xhd", "onLoadMore");
                     mLoadMoreListener.onLoadMore();
                 }
             }

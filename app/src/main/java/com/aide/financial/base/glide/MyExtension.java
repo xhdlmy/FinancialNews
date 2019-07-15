@@ -21,7 +21,7 @@ public class MyExtension {
     public static void trans(RequestOptions options){
         options.placeholder(R.drawable.glide_placeholder_shape)
                 .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.ALL);
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC); // 只缓存原始图片 | 转换后的图片
     }
 
 }
