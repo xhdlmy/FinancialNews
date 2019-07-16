@@ -258,13 +258,11 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
             case LOADING_VIEW:
                 viewHolder = BaseViewHolder.create(mContext, mLoadMoreItem.getLayoutId(), parent);
                 // 加载更多失败后，再次加载
-                viewHolder.getView(mLoadMoreItem.getLoadFailViewId()).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        if(mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_FAIL) {
-                            mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
-                            notifyItemChanged(getLoadMorePosition()); // onBindViewHolder 会自动执行 startLoadMore();
-                        }
+                viewHolder.getView(mLoadMoreItem.getLoadFailViewId()).setOnClickListener(v -> {
+                    if(mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_FAIL) {
+                        mLoadFailToNetworkAgain = true;
+                        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
+                        notifyItemChanged(getLoadMorePosition()); // onBindViewHolder 会自动执行 startLoadMore();
                     }
                 });
                 break;
@@ -283,18 +281,26 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
     private int mCurrentPosition;
     private RecyclerView.ViewHolder mHolder;
 
+    private boolean mLoadFailToNetworkAgain;
+
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         LogUtils.i(TAG, "onBindViewHolder");
         if(mHolder == null) mHolder = holder;
         final BaseViewHolder viewHolder = (BaseViewHolder) holder;
         mCurrentPosition = position;
+
+        // TODO 核心优化的地方 (加载失败后，再次点击，不会去加载数据)
         // 自动加载更多 && 必须在静止状态 才可以进行 加载更多
         if (position == getItemCount() - 1
                 && getLoadMoreCount() != 0
                 && mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_DEFAULT){
             LogUtils.i(TAG, "startLoadMore");
             mLoadMoreItem.setStatus(LoadMoreItem.STATUS_LOADING);
+            if(mLoadFailToNetworkAgain){
+                mLoadMoreListener.onLoadMore();
+                mLoadFailToNetworkAgain = false;
+            }
         }
 
         int viewType = getItemViewType(position);
@@ -314,6 +320,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 LogUtils.i(TAG, "onBindDataView" );
                 onBindData(viewHolder, mDatas.get(adjustPos), adjustPos);
         }
+
     }
 
     @Override
@@ -327,7 +334,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 LogUtils.i(TAG, "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
                 if(newState == RecyclerView.SCROLL_STATE_IDLE && mCurrentPosition == getItemCount() - 1){
 //                    onBindViewHolder(mHolder, mCurrentPosition);
-                    LogUtils.i(TAG, "onLoadMore");
+                    LogUtils.i(TAG, "onLoadMore network");
                     mLoadMoreListener.onLoadMore();
                 }
             }

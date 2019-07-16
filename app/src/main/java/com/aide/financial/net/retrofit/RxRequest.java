@@ -62,15 +62,15 @@ public class RxRequest {
 
     public void post(String category, int count, int pager){
         if(mListener == null) return;
-        Observable observable = getObservable(category, count, pager);
         ProgressSubscriber subscriber = new ProgressSubscriber(mListener);
         if(mIsNoDialog) subscriber.setNoDialog();
-        observable.subscribe(subscriber);
+        getObservable(category, count, pager).subscribe(subscriber);
     }
 
     public Observable<GankResp> getObservable(String category, int count, int pager){
         if(!NetworkUtils.isNetworkConnected()){
-            return Observable.error(new NoNetException());
+            Throwable throwable = new NoNetException();
+            return Observable.error(ExceptionCategory.handleException(throwable));
         }
         return RxRetrofit.getService().post(category, count, pager)
                 .compose(this.handlerResp())
@@ -85,7 +85,6 @@ public class RxRequest {
     private ObservableTransformer<ResponseBody, GankResp> handlerResp() {
         return upstream -> upstream.map((Function<ResponseBody, GankResp>) responseBody -> {
             String string = responseBody.string();
-//            Thread.sleep(3000); // TODO
             GankResp gankResp = mGson.fromJson(string, GankResp.class);
             if(gankResp.error){
                 throw new ProtocolException(ERROR.JSON_ERROR, mRxActivity.getString(R.string.error_protocol_json_resp));
@@ -106,13 +105,11 @@ public class RxRequest {
     // 统一处理错误
     private <T> ObservableTransformer<T, T> handleError() {
         return upstream -> upstream.onErrorResumeNext(throwable -> {
-            LogUtils.i(TAG, "handleError:" + throwable);
             return Observable.error(ExceptionCategory.handleException(throwable));
         });
     }
 
     // 统一处理线程切换
-
     /**
      subscribeOn() 的线程控制可以从事件发出的开端就造成影响 (只使用一次即可，跟顺序无关)
      observeOn() 控制的是它后面的线程

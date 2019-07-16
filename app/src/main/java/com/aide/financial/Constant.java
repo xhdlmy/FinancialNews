@@ -25,6 +25,6 @@ public class Constant {
      */
     // 超时时间
     public static final String URL_BASE = "http://gank.io/api/data/";
-    public static final long CONNECT_TIMEOUT = 30000L;
-    public static final long READ_TIMEOUT = 30000L;
+    public static final long CONNECT_TIMEOUT = 10000L;
+    public static final long READ_TIMEOUT = 10000L;
 }

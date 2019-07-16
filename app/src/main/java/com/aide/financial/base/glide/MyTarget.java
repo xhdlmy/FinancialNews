@@ -36,7 +36,7 @@ public class MyTarget extends CustomViewTarget<ImageView, Bitmap> {
 
     @Override
     public void onLoadFailed(@Nullable Drawable errorDrawable) {
-
+        view.setImageDrawable(errorDrawable);
     }
 
     @Override

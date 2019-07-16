@@ -24,7 +24,7 @@ public class MyExtension {
         return options
                 .placeholder(R.drawable.glide_placeholder_shape)
                 .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC);
+                .diskCacheStrategy(DiskCacheStrategy.ALL);
     }
 
 }

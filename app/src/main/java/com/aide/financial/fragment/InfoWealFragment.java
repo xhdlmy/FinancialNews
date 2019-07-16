@@ -1,5 +1,7 @@
 package com.aide.financial.fragment;
 
+import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.widget.ImageView;
 
@@ -13,6 +15,7 @@ import com.aide.financial.base.glide.GlideApp;
 import com.aide.financial.base.glide.MyTarget;
 import com.aide.financial.net.retrofit.resp.GankData;
 import com.aide.financial.util.ScreenUtils;
+import com.bumptech.glide.request.target.SizeReadyCallback;
 
 import java.util.List;
 
@@ -42,6 +45,14 @@ public class InfoWealFragment extends InfoFragment {
     }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if(mAdapter != null){
+            mAdapter.notifyDataSetChanged();
+        }
+    }
+
+    @Override
     protected void createAdapter(List<GankData> list) {
         mAdapter = new BaseRecyclerAdapter<GankData>(mContext, mRecycleLayoutResId, list) {
             @Override
@@ -49,9 +60,10 @@ public class InfoWealFragment extends InfoFragment {
                 final ImageView ivWeal = holder.getView(R.id.iv_weal);
                 GlideApp.with(mFragment)
                         .asBitmap()
-                        .trans()
                         .load(data.url)
+                        .trans()
                         .into(new MyTarget(ivWeal, mScreenWidth / mSpanCount));
+
             }
         };
     }

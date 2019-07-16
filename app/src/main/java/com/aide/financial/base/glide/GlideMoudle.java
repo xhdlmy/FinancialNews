@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.aide.financial.Constant;
+import com.aide.financial.util.FileUtils;
 import com.bumptech.glide.GlideBuilder;
 import com.bumptech.glide.annotation.GlideModule;
 import com.bumptech.glide.load.engine.cache.DiskLruCacheFactory;
@@ -21,9 +22,12 @@ public class GlideMoudle extends AppGlideModule {
     @Override
     public void applyOptions(@NonNull Context context, @NonNull GlideBuilder builder) {
         // 设置缓存
+        File dir = context.getExternalFilesDir(Constant.GLIDE_DIR);
+        assert dir != null;
+        FileUtils.createDirectory(dir);
         builder.setDiskCache(
                 new DiskLruCacheFactory(
-                        context.getExternalFilesDir(Constant.GLIDE_DIR).getAbsolutePath(),
+                        dir.getAbsolutePath(),
                         Constant.GLIDE_CACHE_SIZE)
         );
     }
