@@ -1,12 +1,7 @@
 package com.aide.financial.fragment;
 
-import android.graphics.Bitmap;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 
 import com.aide.financial.Constant;
 import com.aide.financial.FinancialApplication;
@@ -15,15 +10,9 @@ import com.aide.financial.adapter.recycle.BaseRecyclerAdapter;
 import com.aide.financial.adapter.recycle.BaseViewHolder;
 import com.aide.financial.base.InfoFragment;
 import com.aide.financial.base.glide.GlideApp;
+import com.aide.financial.base.glide.MyTarget;
 import com.aide.financial.net.retrofit.resp.GankData;
 import com.aide.financial.util.ScreenUtils;
-import com.aide.financial.util.SizeUtils;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.RequestBuilder;
-import com.bumptech.glide.RequestManager;
-import com.bumptech.glide.request.RequestOptions;
-import com.bumptech.glide.request.target.SimpleTarget;
-import com.bumptech.glide.request.transition.Transition;
 
 import java.util.List;
 
@@ -58,25 +47,11 @@ public class InfoWealFragment extends InfoFragment {
             @Override
             protected void onBindData(BaseViewHolder holder, GankData data, int position) {
                 final ImageView ivWeal = holder.getView(R.id.iv_weal);
-
                 GlideApp.with(mFragment)
                         .asBitmap()
                         .trans()
                         .load(data.url)
-                        .into(new SimpleTarget<Bitmap>() {
-                            @Override
-                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                float width = resource.getWidth();
-                                float height = resource.getHeight();
-                                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) ivWeal.getLayoutParams();
-                                int margin = (int) mContext.getResources().getDimension(R.dimen.item_gank_drawable_padding);
-                                params.setMargins(margin, margin, margin, margin);
-                                params.width = (mScreenWidth / mSpanCount) - params.leftMargin - params.rightMargin;
-                                params.height = (int) ( params.width / (width / height));
-                                ivWeal.setLayoutParams(params);
-                                ivWeal.setImageBitmap(resource);
-                            }
-                        });
+                        .into(new MyTarget(ivWeal, mScreenWidth / mSpanCount));
             }
         };
     }

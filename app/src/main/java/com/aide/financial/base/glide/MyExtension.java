@@ -1,27 +1,30 @@
 package com.aide.financial.base.glide;
 
-import android.annotation.SuppressLint;
+import android.support.annotation.NonNull;
 
 import com.aide.financial.R;
 import com.bumptech.glide.annotation.GlideExtension;
 import com.bumptech.glide.annotation.GlideOption;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
-import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.BaseRequestOptions;
+
 
 /**
- * 自定义的操作
+ * Created by Bruce on 2019/7/16.
  */
+
 @GlideExtension
 public class MyExtension {
 
-    private MyExtension(){}
+    private MyExtension(){};
 
-    @SuppressLint("CheckResult")
+    @NonNull
     @GlideOption
-    public static void trans(RequestOptions options){
-        options.placeholder(R.drawable.glide_placeholder_shape)
+    public static BaseRequestOptions<?> trans(BaseRequestOptions<?> options) {
+        return options
+                .placeholder(R.drawable.glide_placeholder_shape)
                 .centerCrop()
-                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC); // 只缓存原始图片 | 转换后的图片
+                .diskCacheStrategy(DiskCacheStrategy.AUTOMATIC);
     }
 
 }

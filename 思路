@@ -47,11 +47,6 @@
 
  4. 可扩展的滑动动画
 
- 5. Error : Cannot call this method while RecyclerView is computing a layout or scrolling
-
-    在滑动过程中，不能调用 notifyItemChanged，解决方式就是增加 RecyclerView 的滑动监听，在静止时候，且为最后一个 item 时，才进行 loadMore 操作。
-    这是从根源杜绝了滑动问题。
-
 # Glide 图片加载
 
  1. 绑定 Fragment 生命周期，在 onDestroy 时候，自动调用 clear()  取消加载，回收资源；
@@ -73,6 +68,24 @@
     4.1 当然在请求前可以 preload(width, height)
     4.2 取消请求 clear()
     4.3 重用请求的结果 setTag() getTag()
+
+
+---------
+
+Bug 解决：
+
+ 1. Error : Cannot call this method while RecyclerView is computing a layout or scrolling
+
+    在滑动过程中，不能调用 notifyItemChanged，解决方式就是增加 RecyclerView 的滑动监听，在静止时候，且为最后一个 item 时，才进行 loadMore 操作。
+    这是从根源杜绝了滑动问题。
+
+ 2. Error : Canvas: trying to use a recycled bitmap android.graphics.Bitmap
+
+    原因：Glide SimpleTarget<Bitmap> 在页面切换时回收了 bitmap 资源
+
+    解决办法：使用 4.9.0 的 CustomViewTarget<ImageView, Bitmap> 在 onResourceCleared() 方法中显示 placeholder
+
+
 
 
 
