@@ -40,12 +40,12 @@ public class InfoPresenter extends BasePresenter<InfoView> {
                 }
             }
         });
-//        if(pager == 1){
-//            rxRequest.post(category, count, pager);
-//        }else{
-//            rxRequest.withoutProgress().post(category, count, pager);
-//        }
-        rxRequest.withoutProgress().post(category, count, pager);
+        if(pager == 1){
+            rxRequest.post(category, count, pager);
+        }else{
+            rxRequest.withoutProgress().post(category, count, pager);
+        }
+//        rxRequest.withoutProgress().post(category, count, pager);
     }
 
 }

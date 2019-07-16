@@ -325,15 +325,17 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
                 LogUtils.i(TAG, "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
-                LogUtils.i("xhd", "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
-                LogUtils.i("xhd", "position: " + mCurrentPosition);
                 if(newState == RecyclerView.SCROLL_STATE_IDLE && mCurrentPosition == getItemCount() - 1){
 //                    onBindViewHolder(mHolder, mCurrentPosition);
-                    LogUtils.i("xhd", "onLoadMore");
+                    LogUtils.i(TAG, "onLoadMore");
                     mLoadMoreListener.onLoadMore();
                 }
             }
         });
+    }
+
+    public RecyclerView getRecyclerView(){
+        return mRecyclerView;
     }
 
     protected abstract void onBindData(final BaseViewHolder holder, T data, final int position);

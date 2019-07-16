@@ -13,7 +13,6 @@ import com.aide.financial.fragment.InfoAllFragment;
 import com.aide.financial.fragment.InfoAndroidFragment;
 import com.aide.financial.fragment.InfoExpandFragment;
 import com.aide.financial.fragment.InfoIosFragment;
-import com.aide.financial.fragment.InfoRestFragment;
 import com.aide.financial.fragment.InfoWealFragment;
 import com.aide.financial.fragment.InfoWebFragment;
 
@@ -34,7 +33,6 @@ public class InfoActivity extends BaseActivity {
         R.string.info_web,
         R.string.info_android,
         R.string.info_ios,
-        R.string.info_rest,
         R.string.info_expands,
     };
 
@@ -44,7 +42,6 @@ public class InfoActivity extends BaseActivity {
       new InfoWebFragment(),
       new InfoAndroidFragment(),
       new InfoIosFragment(),
-      new InfoRestFragment(),
       new InfoExpandFragment(),
     };
 

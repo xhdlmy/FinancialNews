@@ -14,6 +14,7 @@
     <dimen name="item_gank_sub_padding">4dp</dimen>
     <dimen name="item_gank_drawable_padding">4dp</dimen>
     <dimen name="item_padding">8dp</dimen>
+    <dimen name="post_media_height">240dp</dimen>
     <!--sp-->
     <dimen name="item_gank_title_sp">16sp</dimen>
     <dimen name="item_gank_sub_sp">12sp</dimen>

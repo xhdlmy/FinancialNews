@@ -105,18 +105,10 @@ public class RxRequest {
 
     // 统一处理错误
     private <T> ObservableTransformer<T, T> handleError() {
-        return new ObservableTransformer<T, T>() {
-            @Override
-            public ObservableSource<T> apply(final Observable<T> upstream) {
-                return upstream.onErrorResumeNext(new Function<Throwable, ObservableSource<? extends T>>() {
-                    @Override
-                    public ObservableSource<? extends T> apply(Throwable throwable) throws Exception {
-                        LogUtils.i(TAG, "handleError:" + throwable);
-                        return Observable.error(ExceptionCategory.handleException(throwable));
-                    }
-                });
-            }
-        };
+        return upstream -> upstream.onErrorResumeNext(throwable -> {
+            LogUtils.i(TAG, "handleError:" + throwable);
+            return Observable.error(ExceptionCategory.handleException(throwable));
+        });
     }
 
     // 统一处理线程切换
@@ -126,14 +118,9 @@ public class RxRequest {
      observeOn() 控制的是它后面的线程
      */
     private <T> ObservableTransformer<T, T> handleThread() {
-        return new ObservableTransformer<T, T>() {
-            @Override
-            public ObservableSource<T> apply(Observable<T> upstream) {
-                return upstream.subscribeOn(Schedulers.io())
-                        .unsubscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread());
-            }
-        };
+        return upstream -> upstream.subscribeOn(Schedulers.io())
+                .unsubscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
 }
