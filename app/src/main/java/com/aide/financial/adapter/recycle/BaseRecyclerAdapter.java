@@ -2,6 +2,7 @@ package com.aide.financial.adapter.recycle;
 
 import android.animation.Animator;
 import android.content.Context;
+import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -64,6 +65,8 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
     public static final String TAG = BaseRecyclerAdapter.class.getSimpleName();
 
     protected Context mContext;
+
+    private Handler mHandler = new Handler();
 
     protected int mLayoutId;
     protected List<T> mDatas;
@@ -260,9 +263,8 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 // 加载更多失败后，再次加载
                 viewHolder.getView(mLoadMoreItem.getLoadFailViewId()).setOnClickListener(v -> {
                     if(mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_FAIL) {
-                        mLoadFailToNetworkAgain = true;
                         mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
-                        notifyItemChanged(getLoadMorePosition()); // onBindViewHolder 会自动执行 startLoadMore();
+                        mHandler.post(() -> notifyItemChanged(getLoadMorePosition())); // onBindViewHolder 会自动执行 startLoadMore();
                     }
                 });
                 break;
@@ -278,35 +280,22 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         return viewHolder;
     }
 
-    private int mCurrentPosition;
     private RecyclerView.ViewHolder mHolder;
-
-    private boolean mLoadFailToNetworkAgain;
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, final int position) {
         LogUtils.i(TAG, "onBindViewHolder");
         if(mHolder == null) mHolder = holder;
         final BaseViewHolder viewHolder = (BaseViewHolder) holder;
-        mCurrentPosition = position;
 
-        // TODO 核心优化的地方 (加载失败后，再次点击，不会去加载数据)
         // 自动加载更多 && 必须在静止状态 才可以进行 加载更多
-        if (position == getItemCount() - 1
-                && getLoadMoreCount() != 0
-                && mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_DEFAULT){
-            LogUtils.i(TAG, "startLoadMore");
-            mLoadMoreItem.setStatus(LoadMoreItem.STATUS_LOADING);
-            if(mLoadFailToNetworkAgain){
-                mLoadMoreListener.onLoadMore();
-                mLoadFailToNetworkAgain = false;
-            }
+        if (position == getItemCount() - 1 && getLoadMoreCount() != 0){
+            startLoadMore();
         }
 
         int viewType = getItemViewType(position);
         switch (viewType) {
             case HEADER_VIEW:
-                LogUtils.i(TAG, "onBindHeaderView");
                 break;
             case EMPTY_VIEW:
                 break;
@@ -317,26 +306,21 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 break;
             default:
                 int adjustPos = position - getHeaderCount();
-                LogUtils.i(TAG, "onBindDataView" );
                 onBindData(viewHolder, mDatas.get(adjustPos), adjustPos);
         }
 
     }
 
+    private int mScrollState = RecyclerView.SCROLL_STATE_IDLE;
+
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
         mRecyclerView = recyclerView;
-        LogUtils.i(TAG, "onAttachedToRecyclerView");
         mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                LogUtils.i(TAG, "onScrollStateChanged: " + (newState == RecyclerView.SCROLL_STATE_IDLE));
-                if(newState == RecyclerView.SCROLL_STATE_IDLE && mCurrentPosition == getItemCount() - 1){
-//                    onBindViewHolder(mHolder, mCurrentPosition);
-                    LogUtils.i(TAG, "onLoadMore network");
-                    mLoadMoreListener.onLoadMore();
-                }
+                mScrollState = newState;
             }
         });
     }
@@ -347,7 +331,183 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
 
     protected abstract void onBindData(final BaseViewHolder holder, T data, final int position);
 
-     /*========================== 以下：header footer ===========================*/
+    /*=========================== 以下：loadmore =======================*/
+
+    /**
+     * 供外界调用
+     * @param loadMoreItem 替换 loadmoreView
+     */
+    public BaseRecyclerAdapter<T> setLoadMoreView(LoadMoreItem loadMoreItem){
+        this.mLoadMoreItem = loadMoreItem;
+        return this;
+    }
+
+    /**
+     * 供外界调用
+     * @param enable 根据第一次加载是否就加载完毕来决定是否需要加载更多
+     */
+    public BaseRecyclerAdapter<T> setLoadMoreEnable(boolean enable){
+        this.mLoadMoreEnable = enable;
+        return this;
+    }
+
+    public BaseRecyclerAdapter<T> setOnLoadMoreListener(OnLoadMoreListener listener){
+        this.mLoadMoreListener = listener;
+        return this;
+    }
+
+    public int getLoadMorePosition(){
+        return getItemCount() - 1;
+    }
+
+    // 触发：onBindViewHolder
+    private void startLoadMore() {
+        if (getLoadMoreCount() == 0) return;
+        if (mLoadMoreItem.getStatus() != LoadMoreItem.STATUS_DEFAULT) return;
+        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_LOADING);
+        Log.i(TAG, "mLoadMoreListener.onLoadMore");
+        mLoadMoreListener.onLoadMore();
+    }
+
+    // onLoadMore结束后：有新增数据
+    public void loadComplete() {
+        if (getLoadMoreCount() == 0) return;
+        Log.i(TAG, "loadComplete");
+        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
+        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+    }
+
+    // onLoadMore结束后：无更新数据
+    public void loadEnd() {
+        if (getLoadMoreCount() == 0) return;
+        Log.i(TAG, "loadEnd");
+        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_END);
+        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+    }
+
+    // onLoadMore结束后：加载失败
+    public void loadFail() {
+        if (getLoadMoreCount() == 0) return;
+        Log.i(TAG, "loadFail");
+        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_FAIL);
+        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+    }
+
+    public interface OnLoadMoreListener {
+        void onLoadMore();
+    }
+
+    /*=========================== 以下：empty layout =======================*/
+
+    /**
+     * 供外界调用
+     * @param resId 替换 emptyView
+     */
+    public BaseRecyclerAdapter<T> setEmptyView(@LayoutRes int resId){
+        this.mEmptyResId = resId;
+        return this;
+    }
+
+    /*=========================== 以下：multiple type =======================*/
+
+    /**
+     * 供外界调用
+     * @param support 更新 dataView tips:定义不同 Type 时不要与 DATA_VIEW EMPTY_VIEW LOADING_VIEW 一样
+     */
+    public BaseRecyclerAdapter<T> setMultiTypeView(IMultiTypeSupport<T> support){
+        this.mMultiTypeSupport = support;
+        return this;
+    }
+
+
+   /*=========================== 以下：mDatas update notifyChanged =======================*/
+
+    public void setDatas(List<T> datas){
+        mDatas = datas;
+        if(mDatas == null) mDatas = new ArrayList<>();
+        notifyDataSetChanged();
+    }
+    
+    public void addDatas(List<T> datas){
+        mDatas.addAll(datas);
+        notifyDataSetChanged();
+    }
+
+    public void addData(T data){
+        mDatas.add(data);
+        notifyItemInserted(mDatas.size()-1);
+    }
+
+    public void addData(int position, T data){
+        mDatas.add(position, data);
+        notifyItemInserted(position);
+    }
+
+    public void setData(int position, T data){
+        mDatas.set(position, data);
+        notifyItemChanged(position);
+    }
+
+    public void removeData(int position){
+        mDatas.remove(position);
+        notifyItemRemoved(position);
+        notifyItemRangeChanged(0, mDatas.size());
+    }
+
+    public void moveTop(int position){
+        // 交换顺序(position之前的元素统统往后一位)
+        T t = mDatas.get(position);
+        for (int i = position - 1; i >= 0; i--){
+            T ti = mDatas.get(i);
+            mDatas.set(i + 1, ti);
+        }
+        mDatas.set(0, t);
+        notifyDataSetChanged();
+    }
+
+    /*=========================== 以下：item click event =======================*/
+
+    public BaseRecyclerAdapter<T> setOnItemClickListener(OnItemClickListener listener){
+        this.mOnItemClickListener = listener;
+        return this;
+    }
+
+    public BaseRecyclerAdapter<T> setOnItemLongClickListener(OnItemLongClickListener listener){
+        this.mOnItemLongClickListener = listener;
+        return this;
+    }
+
+    private void bindOnClickListener(final BaseViewHolder viewHolder) {
+        if (viewHolder == null || viewHolder.getConvertView() == null) return;
+
+        viewHolder.getConvertView().setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(mOnItemClickListener != null) mOnItemClickListener.onItemClick(v, viewHolder.getLayoutPosition() - getHeaderCount());
+            }
+        });
+        viewHolder.getConvertView().setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                if(mOnItemLongClickListener != null) mOnItemLongClickListener.onItemLongClick(v, viewHolder.getLayoutPosition()  - getHeaderCount());
+                return true;
+            }
+        });
+    }
+
+    public interface OnItemClickListener {
+
+        void onItemClick(View v, int position);
+
+    }
+
+    public interface OnItemLongClickListener {
+
+        void onItemLongClick(View v, int position);
+
+    }
+
+    /*========================== 以下：header footer ===========================*/
 
     public LinearLayout getHeaderLayout() {
         return mHeaderLayout;
@@ -518,182 +678,6 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         mEmptyHeaderEnable = emptyHeaderEnable;
         mEmptyFooterEnable = emptyFooterEnable;
         return this;
-    }
-
-    /*=========================== 以下：loadmore =======================*/
-
-    /**
-     * 供外界调用
-     * @param loadMoreItem 替换 loadmoreView
-     */
-    public BaseRecyclerAdapter<T> setLoadMoreView(LoadMoreItem loadMoreItem){
-        this.mLoadMoreItem = loadMoreItem;
-        return this;
-    }
-
-    /**
-     * 供外界调用
-     * @param enable 根据第一次加载是否就加载完毕来决定是否需要加载更多
-     */
-    public BaseRecyclerAdapter<T> setLoadMoreEnable(boolean enable){
-        this.mLoadMoreEnable = enable;
-        return this;
-    }
-
-    public BaseRecyclerAdapter<T> setOnLoadMoreListener(OnLoadMoreListener listener){
-        this.mLoadMoreListener = listener;
-        return this;
-    }
-
-    public int getLoadMorePosition(){
-        return getItemCount() - 1;
-    }
-
-    // 触发：onBindViewHolder
-    private void startLoadMore() {
-        if (getLoadMoreCount() == 0) return;
-        if (mLoadMoreItem.getStatus() != LoadMoreItem.STATUS_DEFAULT) return;
-        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_LOADING);
-        Log.i(TAG, "mLoadMoreListener.onLoadMore");
-        mLoadMoreListener.onLoadMore();
-    }
-
-    // onLoadMore结束后：有新增数据
-    public void loadComplete() {
-        if (getLoadMoreCount() == 0) return;
-        Log.i(TAG, "loadComplete");
-        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
-        notifyItemChanged(getLoadMorePosition());
-    }
-
-    // onLoadMore结束后：无更新数据
-    public void loadEnd() {
-        if (getLoadMoreCount() == 0) return;
-        Log.i(TAG, "loadEnd");
-        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_END);
-        notifyItemChanged(getLoadMorePosition());
-    }
-
-    // onLoadMore结束后：加载失败
-    public void loadFail() {
-        if (getLoadMoreCount() == 0) return;
-        Log.i(TAG, "loadFail");
-        mLoadMoreItem.setStatus(LoadMoreItem.STATUS_FAIL);
-        notifyItemChanged(getLoadMorePosition());
-    }
-
-    public interface OnLoadMoreListener {
-        void onLoadMore();
-    }
-
-    /*=========================== 以下：empty layout =======================*/
-
-    /**
-     * 供外界调用
-     * @param resId 替换 emptyView
-     */
-    public BaseRecyclerAdapter<T> setEmptyView(@LayoutRes int resId){
-        this.mEmptyResId = resId;
-        return this;
-    }
-
-    /*=========================== 以下：multiple type =======================*/
-
-    /**
-     * 供外界调用
-     * @param support 更新 dataView tips:定义不同 Type 时不要与 DATA_VIEW EMPTY_VIEW LOADING_VIEW 一样
-     */
-    public BaseRecyclerAdapter<T> setMultiTypeView(IMultiTypeSupport<T> support){
-        this.mMultiTypeSupport = support;
-        return this;
-    }
-
-
-   /*=========================== 以下：mDatas update notifyChanged =======================*/
-
-    public void setDatas(List<T> datas){
-        mDatas = datas;
-        if(mDatas == null) mDatas = new ArrayList<>();
-        notifyDataSetChanged();
-    }
-    
-    public void addDatas(List<T> datas){
-        mDatas.addAll(datas);
-        notifyDataSetChanged();
-    }
-
-    public void addData(T data){
-        mDatas.add(data);
-        notifyItemInserted(mDatas.size()-1);
-    }
-
-    public void addData(int position, T data){
-        mDatas.add(position, data);
-        notifyItemInserted(position);
-    }
-
-    public void setData(int position, T data){
-        mDatas.set(position, data);
-        notifyItemChanged(position);
-    }
-
-    public void removeData(int position){
-        mDatas.remove(position);
-        notifyItemRemoved(position);
-        notifyItemRangeChanged(0, mDatas.size());
-    }
-
-    public void moveTop(int position){
-        // 交换顺序(position之前的元素统统往后一位)
-        T t = mDatas.get(position);
-        for (int i = position - 1; i >= 0; i--){
-            T ti = mDatas.get(i);
-            mDatas.set(i + 1, ti);
-        }
-        mDatas.set(0, t);
-        notifyDataSetChanged();
-    }
-
-    /*=========================== 以下：item click event =======================*/
-
-    public BaseRecyclerAdapter<T> setOnItemClickListener(OnItemClickListener listener){
-        this.mOnItemClickListener = listener;
-        return this;
-    }
-
-    public BaseRecyclerAdapter<T> setOnItemLongClickListener(OnItemLongClickListener listener){
-        this.mOnItemLongClickListener = listener;
-        return this;
-    }
-
-    private void bindOnClickListener(final BaseViewHolder viewHolder) {
-        if (viewHolder == null || viewHolder.getConvertView() == null) return;
-
-        viewHolder.getConvertView().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(mOnItemClickListener != null) mOnItemClickListener.onItemClick(v, viewHolder.getLayoutPosition() - getHeaderCount());
-            }
-        });
-        viewHolder.getConvertView().setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View v) {
-                if(mOnItemLongClickListener != null) mOnItemLongClickListener.onItemLongClick(v, viewHolder.getLayoutPosition()  - getHeaderCount());
-                return true;
-            }
-        });
-    }
-
-    public interface OnItemClickListener {
-
-        void onItemClick(View v, int position);
-
-    }
-
-    public interface OnItemLongClickListener {
-
-        void onItemLongClick(View v, int position);
-
     }
     
     /*=========================== 以下：animation =======================*/

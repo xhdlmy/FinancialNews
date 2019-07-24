@@ -74,10 +74,31 @@
 
 Bug 解决：
 
- 1. Error : Cannot call this method while RecyclerView is computing a layout or scrolling
+ 1. Error : Cannot call this method while RecyclerView is computing a layout or scrolling android.support.v7.widget.RecyclerView
 
     在滑动过程中，不能调用 notifyItemChanged，解决方式就是增加 RecyclerView 的滑动监听，在静止时候，且为最后一个 item 时，才进行 loadMore 操作。
-    这是从根源杜绝了滑动问题。
+    这是从根源杜绝了滑动问题。（但是不一定解决问题，如果一瞬间加载失败，还是有问题，应该从 notifyItemChanged 方面找问题。）
+
+    notifyItemChanged 就是通过观察者模式调用 onChanged 代码：
+
+        public void onChanged() {
+            RecyclerView.this.assertNotInLayoutOrScroll((String)null); // 就是这里报错
+            RecyclerView.this.mState.mStructureChanged = true;
+            RecyclerView.this.processDataSetCompletelyChanged(true);
+            if (!RecyclerView.this.mAdapterHelper.hasPendingUpdates()) {
+                RecyclerView.this.requestLayout(); // 更新UI
+            }
+        }
+
+        只有满足 recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE && !recyclerView.isComputingLayout() 才可以  notifyItemChanged()
+
+        这是一个思路，一直监听滚动状态和Layout状态
+
+
+        或者第二个思路：将 RecyclerView.this.requestLayout(); 加入到 Handler 处理的队列中
+        主线程刷新UI是通过消息队列，当列表正在滚动或者layout时调用notifyDataSetChanged()，
+        那么notifyDataSetChanged()里面的代码是和正在滚动或者layout同一消息里面的，
+        如果加上Handler.post()，那么就是将新建立的消息放入消息队列末尾，这样两个刷新不在同一个消息，有先后顺序。
 
  2. Error : Canvas: trying to use a recycled bitmap android.graphics.Bitmap
 
