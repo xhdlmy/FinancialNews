@@ -92,7 +92,32 @@ Bug 解决：
 
         只有满足 recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE && !recyclerView.isComputingLayout() 才可以  notifyItemChanged()
 
-        这是一个思路，一直监听滚动状态和Layout状态
+        这是一个思路，while(true) 判断是否是在 layout 中
+
+            private final int FLAG_NOTIFY_LOADMORE_ITEM_CHANGED = 1;
+                private Handler mHandler = new Handler(new Handler.Callback() {
+                    @Override
+                    public boolean handleMessage(Message msg) {
+                        if(msg.what == FLAG_NOTIFY_LOADMORE_ITEM_CHANGED){
+                            notifyItemChanged(getLoadMorePosition());
+                            mIsNotifyItemChanged = false;
+                            return true;
+                        }
+                        return false;
+                    }
+                });
+
+            然后在构造方法中：
+            子线程 while(true) 循环监听
+            Executors.newSingleThreadExecutor().execute(() -> {
+                while (true) {
+                    if(mRecyclerView != null && mIsNotifyItemChanged){
+                        if(!mRecyclerView.isComputingLayout() && mRecyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
+                            mHandler.sendEmptyMessage(FLAG_NOTIFY_LOADMORE_ITEM_CHANGED);
+                        }
+                    }
+                }
+            });
 
 
         或者第二个思路：将 RecyclerView.this.requestLayout(); 加入到 Handler 处理的队列中

@@ -3,6 +3,7 @@ package com.aide.financial.adapter.recycle;
 import android.animation.Animator;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.IntDef;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
@@ -29,6 +30,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -37,11 +39,8 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 Cannot call this method while RecyclerView is computing a layout or scrolling android.support.v7.widget.RecyclerView
 
-解决方式二：只有满足 recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE && !recyclerView.isComputingLayout() 才可以  notifyItemChanged()
-
-        notifyDataSetChanged()里面的代码是和正在滚动或者layout同一消息里面的，
-        如果加上Handler.post()，那么就是将新建立的消息 notifyDataSetChanged  最后调用的 RecyclerView.this.requestLayout() 放入消息队列末尾，
-        这样两个刷新不在同一个消息，有先后顺序。
+解决方式一：只有满足 recyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE && !recyclerView.isComputingLayout() 才可以  notifyItemChanged()
+        这是一个思路，while(true) 判断是否是在 computingLayout 和 notifyItemChanged
  */
 /**
  * Adapter模式：数据与显示分离
@@ -69,13 +68,25 @@ Cannot call this method while RecyclerView is computing a layout or scrolling an
 
 // 防止滑动的时候 notifyItemChanged
 
-public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
+public abstract class BaseRecyclerAdapter2<T> extends RecyclerView.Adapter {
 
-    public static final String TAG = BaseRecyclerAdapter.class.getSimpleName();
+    public static final String TAG = BaseRecyclerAdapter2.class.getSimpleName();
 
     protected Context mContext;
 
-    private Handler mHandler = new Handler();
+    // 专门用来 loadmore item 的状态更新
+    private final int FLAG_NOTIFY_LOADMORE_ITEM_CHANGED = 1;
+    private Handler mHandler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            if(msg.what == FLAG_NOTIFY_LOADMORE_ITEM_CHANGED){
+                notifyItemChanged(getLoadMorePosition());
+                mIsNotifyItemChanged = false;
+                return true;
+            }
+            return false;
+        }
+    });
 
     protected int mLayoutId;
     protected List<T> mDatas;
@@ -139,13 +150,24 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * @param layoutId data layout
      * @param datas
      */
-    public BaseRecyclerAdapter(@NonNull Context context, @LayoutRes int layoutId, List<T> datas) {
+    public BaseRecyclerAdapter2(@NonNull Context context, @LayoutRes int layoutId, List<T> datas) {
         mContext = context;
         mLayoutId = layoutId;
         mDatas = datas;
         if (datas == null) mDatas = new ArrayList<>();
         mHeaderLayout = new LinearLayout(mContext);
         mFooterLayout = new LinearLayout(mContext);
+
+        Executors.newSingleThreadExecutor().execute(() -> {
+            while (true) {
+                if(mRecyclerView != null && mIsNotifyItemChanged){
+                    if(!mRecyclerView.isComputingLayout() && mRecyclerView.getScrollState() == RecyclerView.SCROLL_STATE_IDLE) {
+                        mHandler.sendEmptyMessage(FLAG_NOTIFY_LOADMORE_ITEM_CHANGED);
+                    }
+                }
+            }
+        });
+
     }
 
     @Override
@@ -273,7 +295,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
                 viewHolder.getView(mLoadMoreItem.getLoadFailViewId()).setOnClickListener(v -> {
                     if(mLoadMoreItem.getStatus() == LoadMoreItem.STATUS_FAIL) {
                         mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
-                        mHandler.post(() -> notifyItemChanged(getLoadMorePosition())); // onBindViewHolder 会自动执行 startLoadMore();
+                        mIsNotifyItemChanged = true;
                     }
                 });
                 break;
@@ -321,17 +343,24 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
     }
 
     private int mScrollState = RecyclerView.SCROLL_STATE_IDLE;
+    private boolean mIsNotifyItemChanged;
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
         super.onAttachedToRecyclerView(recyclerView);
         mRecyclerView = recyclerView;
-        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-                mScrollState = newState;
-            }
-        });
+//        mRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+//            @Override
+//            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+//                LogUtils.i("xhd", "OnScrollListener");
+//                mScrollState = newState;
+//                if(mIsNotifyItemChanged && mScrollState == RecyclerView.SCROLL_STATE_IDLE && mRecyclerView.isComputingLayout()){
+//                    notifyDataSetChanged();
+//                    LogUtils.i("xhd", "notifyDataSetChanged");
+//                    mIsNotifyItemChanged = false;
+//                }
+//            }
+//        });
     }
 
     public RecyclerView getRecyclerView(){
@@ -346,7 +375,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param loadMoreItem 替换 loadmoreView
      */
-    public BaseRecyclerAdapter<T> setLoadMoreView(LoadMoreItem loadMoreItem){
+    public BaseRecyclerAdapter2<T> setLoadMoreView(LoadMoreItem loadMoreItem){
         this.mLoadMoreItem = loadMoreItem;
         return this;
     }
@@ -355,12 +384,12 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param enable 根据第一次加载是否就加载完毕来决定是否需要加载更多
      */
-    public BaseRecyclerAdapter<T> setLoadMoreEnable(boolean enable){
+    public BaseRecyclerAdapter2<T> setLoadMoreEnable(boolean enable){
         this.mLoadMoreEnable = enable;
         return this;
     }
 
-    public BaseRecyclerAdapter<T> setOnLoadMoreListener(OnLoadMoreListener listener){
+    public BaseRecyclerAdapter2<T> setOnLoadMoreListener(OnLoadMoreListener listener){
         this.mLoadMoreListener = listener;
         return this;
     }
@@ -383,7 +412,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         if (getLoadMoreCount() == 0) return;
         Log.i(TAG, "loadComplete");
         mLoadMoreItem.setStatus(LoadMoreItem.STATUS_DEFAULT);
-        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+        mIsNotifyItemChanged = true;
     }
 
     // onLoadMore结束后：无更新数据
@@ -391,7 +420,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         if (getLoadMoreCount() == 0) return;
         Log.i(TAG, "loadEnd");
         mLoadMoreItem.setStatus(LoadMoreItem.STATUS_END);
-        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+        mIsNotifyItemChanged = true;
     }
 
     // onLoadMore结束后：加载失败
@@ -399,7 +428,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         if (getLoadMoreCount() == 0) return;
         Log.i(TAG, "loadFail");
         mLoadMoreItem.setStatus(LoadMoreItem.STATUS_FAIL);
-        mHandler.post(() -> notifyItemChanged(getLoadMorePosition()));
+        mIsNotifyItemChanged = true;
     }
 
     public interface OnLoadMoreListener {
@@ -412,7 +441,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param resId 替换 emptyView
      */
-    public BaseRecyclerAdapter<T> setEmptyView(@LayoutRes int resId){
+    public BaseRecyclerAdapter2<T> setEmptyView(@LayoutRes int resId){
         this.mEmptyResId = resId;
         return this;
     }
@@ -423,7 +452,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param support 更新 dataView tips:定义不同 Type 时不要与 DATA_VIEW EMPTY_VIEW LOADING_VIEW 一样
      */
-    public BaseRecyclerAdapter<T> setMultiTypeView(IMultiTypeSupport<T> support){
+    public BaseRecyclerAdapter2<T> setMultiTypeView(IMultiTypeSupport<T> support){
         this.mMultiTypeSupport = support;
         return this;
     }
@@ -476,12 +505,12 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
 
     /*=========================== 以下：item click event =======================*/
 
-    public BaseRecyclerAdapter<T> setOnItemClickListener(OnItemClickListener listener){
+    public BaseRecyclerAdapter2<T> setOnItemClickListener(OnItemClickListener listener){
         this.mOnItemClickListener = listener;
         return this;
     }
 
-    public BaseRecyclerAdapter<T> setOnItemLongClickListener(OnItemLongClickListener listener){
+    public BaseRecyclerAdapter2<T> setOnItemLongClickListener(OnItemLongClickListener listener){
         this.mOnItemLongClickListener = listener;
         return this;
     }
@@ -550,15 +579,15 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         }
     }
 
-    public BaseRecyclerAdapter<T> addHeaderView(View header) {
+    public BaseRecyclerAdapter2<T> addHeaderView(View header) {
         return addHeaderView(header, -1);
     }
 
-    public BaseRecyclerAdapter<T> addHeaderView(View header, int index) {
+    public BaseRecyclerAdapter2<T> addHeaderView(View header, int index) {
         return addHeaderView(header, index, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> addHeaderView(View header, int index, int orientation) {
+    public BaseRecyclerAdapter2<T> addHeaderView(View header, int index, int orientation) {
         if (orientation == LinearLayout.VERTICAL) {
             mHeaderLayout.setOrientation(LinearLayout.VERTICAL);
             mHeaderLayout.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
@@ -579,15 +608,15 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         return this;
     }
 
-    public BaseRecyclerAdapter<T> setHeaderView(View header) {
+    public BaseRecyclerAdapter2<T> setHeaderView(View header) {
         return setHeaderView(header, 0, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> setHeaderView(View header, int index) {
+    public BaseRecyclerAdapter2<T> setHeaderView(View header, int index) {
         return setHeaderView(header, index, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> setHeaderView(View header, int index, int orientation) {
+    public BaseRecyclerAdapter2<T> setHeaderView(View header, int index, int orientation) {
         if (mHeaderLayout == null || mHeaderLayout.getChildCount() <= index) {
             return addHeaderView(header, index, orientation);
         } else {
@@ -597,15 +626,15 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         }
     }
 
-    public BaseRecyclerAdapter<T> addFooterView(View footer) {
+    public BaseRecyclerAdapter2<T> addFooterView(View footer) {
         return addFooterView(footer, -1, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> addFooterView(View footer, int index) {
+    public BaseRecyclerAdapter2<T> addFooterView(View footer, int index) {
         return addFooterView(footer, index, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> addFooterView(View footer, int index, int orientation) {
+    public BaseRecyclerAdapter2<T> addFooterView(View footer, int index, int orientation) {
         if (orientation == LinearLayout.VERTICAL) {
             mFooterLayout.setOrientation(LinearLayout.VERTICAL);
             mFooterLayout.setLayoutParams(new RecyclerView.LayoutParams(MATCH_PARENT, WRAP_CONTENT));
@@ -626,15 +655,15 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
         return this;
     }
 
-    public BaseRecyclerAdapter<T> setFooterView(View header) {
+    public BaseRecyclerAdapter2<T> setFooterView(View header) {
         return setFooterView(header, 0, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> setFooterView(View header, int index) {
+    public BaseRecyclerAdapter2<T> setFooterView(View header, int index) {
         return setFooterView(header, index, LinearLayout.VERTICAL);
     }
 
-    public BaseRecyclerAdapter<T> setFooterView(View header, int index, int orientation) {
+    public BaseRecyclerAdapter2<T> setFooterView(View header, int index, int orientation) {
         if (mFooterLayout == null || mFooterLayout.getChildCount() <= index) {
             return addFooterView(header, index, orientation);
         } else {
@@ -683,7 +712,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
     /**
      * 供外界调用
      */
-    public BaseRecyclerAdapter<T> setHeaderFooterEmptyEnable(boolean emptyHeaderEnable, boolean emptyFooterEnable) {
+    public BaseRecyclerAdapter2<T> setHeaderFooterEmptyEnable(boolean emptyHeaderEnable, boolean emptyFooterEnable) {
         mEmptyHeaderEnable = emptyHeaderEnable;
         mEmptyFooterEnable = emptyFooterEnable;
         return this;
@@ -723,7 +752,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param animationType 选择现有提供的动画
      */
-    public BaseRecyclerAdapter<T> setSelectedAnimation(@AnimationType int animationType) {
+    public BaseRecyclerAdapter2<T> setSelectedAnimation(@AnimationType int animationType) {
         switch (animationType) {
             case ALPHAIN:
                 mSelectedAmimation = new AlphaInAnimation();
@@ -750,12 +779,12 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param animation 选择自定义的动画
      */
-    public BaseRecyclerAdapter<T> setCustomAnimation(BaseAnimation animation) {
+    public BaseRecyclerAdapter2<T> setCustomAnimation(BaseAnimation animation) {
         this.mCustomAnimation = animation;
         return this;
     }
 
-    public BaseRecyclerAdapter<T> setAnimationEnable(boolean isAnimationEnable){
+    public BaseRecyclerAdapter2<T> setAnimationEnable(boolean isAnimationEnable){
         this.mIsAnimationEnable = isAnimationEnable;
         return this;
     }
@@ -764,7 +793,7 @@ public abstract class BaseRecyclerAdapter<T> extends RecyclerView.Adapter {
      * 供外界调用
      * @param isAnimationOnlyFirst 是否只是第一次显示时才加载动画
      */
-    public BaseRecyclerAdapter<T> setAnimationOnlyFirst(boolean isAnimationOnlyFirst) {
+    public BaseRecyclerAdapter2<T> setAnimationOnlyFirst(boolean isAnimationOnlyFirst) {
         this.mIsAnimationOnlyFirst = isAnimationOnlyFirst;
         return this;
     }
